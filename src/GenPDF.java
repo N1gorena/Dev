@@ -18,7 +18,7 @@ import org.json.simple.JSONObject;
 import com.mysql.jdbc.PreparedStatement;
 
 
-public class SearchPDF extends HttpServlet {
+public class GenPDF extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static String serverURL = "jdbc:mysql://localhost:3306/capstonedb?useSSL=false";
    
@@ -39,12 +39,14 @@ public class SearchPDF extends HttpServlet {
 			Class.forName("com.mysql.jdbc.Driver");
 			dbConn = DriverManager.getConnection(serverURL,"root","Trojans17");
 			
-			dbConn.prepareStatement("SELECT ");
+			//dbConn.prepareStatement("SELECT ");
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			obj.put("Message", e.getMessage());
+			obj.put("Success", false);
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+			obj.put("Message", e.getMessage());
+			obj.put("Success", false);
 			e.printStackTrace();
 		}
 	}

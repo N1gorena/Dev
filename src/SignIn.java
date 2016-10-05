@@ -64,6 +64,7 @@ public class SignIn extends HttpServlet {
 				obj.put("Message", message);
 				obj.put("Success", false);
 			}
+			dbConn.close();
 			
 		} catch (ClassNotFoundException e) {
 			obj.put("Message", e.getMessage());

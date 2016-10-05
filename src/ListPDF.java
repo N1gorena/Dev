@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.mysql.jdbc.PreparedStatement;
@@ -49,7 +50,7 @@ public class ListPDF extends HttpServlet {
 					resultObject.add(results.getString(1));
 				}
 				obj.put("Message", message);
-				obj.put("Catagories", resultObject);
+				obj.put("Categories", resultObject);
 				obj.put("Success", true);
 				
 				break;
@@ -63,7 +64,15 @@ public class ListPDF extends HttpServlet {
 					documents.add(boofer);
 				}
 				obj.put("Message", message);
-				obj.put("PDFS", documents);
+				JSONArray array = new JSONArray();
+				for(String[] sA : documents){
+					JSONArray newArray = new JSONArray();
+					for(String s : sA){
+						newArray.add(s);
+					}
+					array.add(newArray);
+				}
+				obj.put("PDFS", array);
 				obj.put("Success", true);
 				break;
 			case "3": 
@@ -72,7 +81,7 @@ public class ListPDF extends HttpServlet {
 				break;
 			case "4":
 				genStatement = (PreparedStatement) dbConn.prepareStatement("SELECT UniqueID,Filepath,PDFTitle FROM filled_pdfs where UniqueIDOfUser = ?");
-				genStatement.setInt(1, Integer.parseInt(request.getParameter("userUniqueID")));
+				genStatement.setInt(1, Integer.parseInt(request.getParameter("UserUniqueID")));
 				results = genStatement.executeQuery();
 				ArrayList<String[]> filledPDFS = new ArrayList<>();
 				while(results.next()){
@@ -80,7 +89,15 @@ public class ListPDF extends HttpServlet {
 					filledPDFS.add(boofer);
 				}
 				obj.put("Message", message);
-				obj.put("UserDocs", filledPDFS);
+				JSONArray arrayOfArrays = new JSONArray();
+				for(String[] sA : filledPDFS){
+					JSONArray temp = new JSONArray();
+					for(String s : sA){
+						temp.add(s);
+					}
+					arrayOfArrays.add(temp);
+				}
+				obj.put("UserDocs", arrayOfArrays);
 				obj.put("Success", true);
 				break;
 			default:
@@ -89,9 +106,10 @@ public class ListPDF extends HttpServlet {
 				obj.put("Success", false);
 				
 			}
-			
+			dbConn.close(); 
 			output.print(obj);
 			
+
 		}
 		catch(ClassNotFoundException e) {
 			obj.put("Message", e.getMessage());

@@ -58,11 +58,18 @@ public class Main extends HttpServlet {
 			createUser.setString(1, request.getParameter("FirstName"));
 			createUser.setString(2, request.getParameter("LastName"));
 			createUser.setString(3, request.getParameter("MiddleName"));
-			createUser.setDate(4, Date.valueOf(request.getParameter("DOB")));
+			
+			String nullCheckString;
+			if((nullCheckString = request.getParameter("DOB")) != null)
+			createUser.setDate(4, Date.valueOf(nullCheckString));
+			
 			createUser.setString(5, request.getParameter("Address1"));
 			createUser.setString(6, request.getParameter("Address2"));
 			createUser.setString(7, request.getParameter("City"));
-			createUser.setInt(8, Integer.parseInt(request.getParameter("PostalCode")));
+			
+			if((nullCheckString = request.getParameter("PostalCode")) != null)
+			createUser.setInt(8, Integer.parseInt(nullCheckString));
+			
 			createUser.setString(9, request.getParameter("PhoneNumber"));
 			createUser.setString(10, request.getParameter("State"));
 			createUser.setString(11, request.getParameter("LicenseNumber"));
@@ -71,6 +78,7 @@ public class Main extends HttpServlet {
 
 			rowsAffected = createUser.executeUpdate();
 
+			dbConn.close();
 			}
 		catch (ClassNotFoundException e){
 			output.println("CNF" + e.getMessage());
@@ -93,6 +101,7 @@ public class Main extends HttpServlet {
 		}
 		
 		output.print(obj);
+		
 	}
 
 	/**

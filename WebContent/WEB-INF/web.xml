@@ -14,8 +14,8 @@
     <servlet-class>ListPDF</servlet-class>
   </servlet>
   <servlet>
-    <servlet-name>FindPDF</servlet-name>
-    <servlet-class>SearchPDF</servlet-class>
+    <servlet-name>FinishPDF</servlet-name>
+    <servlet-class>GenPDF</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>SignUp</servlet-name>
@@ -30,8 +30,8 @@
     <url-pattern>/ListPDF</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>FindPDF</servlet-name>
-    <url-pattern>/FindPDF</url-pattern>
+    <servlet-name>FinishPDF</servlet-name>
+    <url-pattern>/FillPDF</url-pattern>
   </servlet-mapping>
   <welcome-file-list>
     <welcome-file>index.html</welcome-file>
