@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -38,7 +40,15 @@ public class GenPDF extends HttpServlet {
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 			dbConn = DriverManager.getConnection(serverURL,"root","Trojans17");
-			
+			StringBuilder newStringBuilder = new StringBuilder();
+			newStringBuilder.append("Connected to db. Keys<");
+			Map<String,String[]> requestKeyVals = request.getParameterMap();
+			Set<String> keySet = requestKeyVals.keySet();
+			for(String s : keySet){
+				newStringBuilder.append(s+",");
+			}
+			newStringBuilder.insert(newStringBuilder.lastIndexOf(","),">");
+			obj.put("Keys", newStringBuilder.toString());
 			//dbConn.prepareStatement("SELECT ");
 		} catch (SQLException e) {
 			obj.put("Message", e.getMessage());
