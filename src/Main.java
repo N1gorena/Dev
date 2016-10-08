@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.servlet.ServletException;
@@ -44,6 +45,7 @@ public class Main extends HttpServlet {
 		 */
 		Connection dbConn;
 		PreparedStatement createUser = null;
+		PreparedStatement checkForUser = null;
 		int rowsAffected = 0;
 		response.setContentType("application/json");
 		PrintWriter output = response.getWriter();
@@ -53,35 +55,47 @@ public class Main extends HttpServlet {
 
 			dbConn = DriverManager.getConnection(serverURL, "root", "Trojans17");
 			
-			createUser = (PreparedStatement) dbConn.prepareStatement("INSERT INTO user (FirstName,LastName,MiddleName,DOB,Address1,Address2,City,ZipCode,PhoneNumber,State,DLNumber, Email, Password) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
-			//createUser = (PreparedStatement) dbConn.prepareStatement("INSERT INTO user (FirstName,LastName) VALUES (?,?)");
-			createUser.setString(1, request.getParameter("FirstName"));
-			createUser.setString(2, request.getParameter("LastName"));
-			createUser.setString(3, request.getParameter("MiddleName"));
 			
-			String nullCheckString;
-			if((nullCheckString = request.getParameter("DOB")) != null)
-			createUser.setDate(4, Date.valueOf(nullCheckString));
-			
-			createUser.setString(5, request.getParameter("Address1"));
-			createUser.setString(6, request.getParameter("Address2"));
-			createUser.setString(7, request.getParameter("City"));
-			
-			if((nullCheckString = request.getParameter("PostalCode")) != null)
-			createUser.setInt(8, Integer.parseInt(nullCheckString));
-			
-			createUser.setString(9, request.getParameter("PhoneNumber"));
-			createUser.setString(10, request.getParameter("State"));
-			createUser.setString(11, request.getParameter("LicenseNumber"));
-			createUser.setString(12, request.getParameter("EmailAddress"));
-			createUser.setString(13, request.getParameter("Password"));
+			String emailGiven =  request.getParameter("EmailAddress");
+			if(emailGiven != null){
+				checkForUser = (PreparedStatement) dbConn.prepareStatement("Select Email from user where Email = ?");
+				checkForUser.setString(1, emailGiven);
+				ResultSet userExists = checkForUser.executeQuery();
+				if(userExists.first()){
+					errMessage = "Email already in use.";
+				}
+				else{
+					createUser = (PreparedStatement) dbConn.prepareStatement("INSERT INTO user (FirstName,LastName,MiddleName,DOB,Address1,Address2,City,ZipCode,PhoneNumber,State,DLNumber, Email, Password) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+					//createUser = (PreparedStatement) dbConn.prepareStatement("INSERT INTO user (FirstName,LastName) VALUES (?,?)");
+					createUser.setString(1, request.getParameter("FirstName"));
+					createUser.setString(2, request.getParameter("LastName"));
+					createUser.setString(3, request.getParameter("MiddleName"));
+					
+					String nullCheckString;
+					if((nullCheckString = request.getParameter("DOB")) != null)
+					createUser.setDate(4, Date.valueOf(nullCheckString));
+					
+					createUser.setString(5, request.getParameter("Address1"));
+					createUser.setString(6, request.getParameter("Address2"));
+					createUser.setString(7, request.getParameter("City"));
+					
+					if((nullCheckString = request.getParameter("PostalCode")) != null)
+					createUser.setInt(8, Integer.parseInt(nullCheckString));
+					
+					createUser.setString(9, request.getParameter("PhoneNumber"));
+					createUser.setString(10, request.getParameter("State"));
+					createUser.setString(11, request.getParameter("LicenseNumber"));
+					createUser.setString(12, emailGiven);
+					createUser.setString(13, request.getParameter("Password"));
 
-			rowsAffected = createUser.executeUpdate();
-
+					rowsAffected = createUser.executeUpdate();
+				}
+			}
 			dbConn.close();
 			}
 		catch (ClassNotFoundException e){
 			output.println("CNF" + e.getMessage());
+			errMessage = e.getMessage();
 			e.printStackTrace();
 		}
 		catch (SQLException e) {
