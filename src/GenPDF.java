@@ -28,7 +28,7 @@ public class GenPDF extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static String serverURL = "jdbc:mysql://localhost:3306/capstonedb?useSSL=false";
 	//TODO finish Statement
-	private final String query = "SELECT field_name,type,field_option FROM pdf_structure where PdfID = ?";
+	private final String query = "SELECT field_name,type,field_option FROM pdf_structure where pdf_id = ?";
 	private Map<String,FieldElement> fieldData;
    
 	/**
@@ -82,6 +82,7 @@ public class GenPDF extends HttpServlet {
 				}
 				obj.put("Message", "Success");
 				obj.put("Success", true);
+				dbConn.close();
 					
 			} catch (SQLException e) {
 				obj.put("Message", e.getMessage());
@@ -93,6 +94,11 @@ public class GenPDF extends HttpServlet {
 				e.printStackTrace();
 			}
 		}
+		else{
+			obj.put("Message", message);
+			obj.put("Success", false);
+		}
+		output.print(obj);
 	}
 
 	/**
