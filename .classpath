@@ -8,9 +8,9 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
 	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.module.container"/>
-	<classpathentry kind="lib" path="C:/Users/NJG/Desktop/java_ee_sdk-7u2/glassfish4/mq/lib/javax.servlet-api.jar"/>
-	<classpathentry kind="lib" path="C:/Users/NJG/Desktop/mysql-connector-java-5.1.39/json-simple-1.1.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/NJG/Desktop/mysql-connector-java-5.1.39/mysql-connector-java-5.1.39/mysql-connector-java-5.1.39-bin.jar"/>
-	<classpathentry kind="lib" path="C:/Users/NJG/Desktop/pdfbox-app-2.0.3.jar"/>
+	<classpathentry kind="lib" path="/home/nijeguan/Android/json-simple-1.1.jar"/>
+	<classpathentry kind="lib" path="/home/nijeguan/Android/glassfish4/mq/lib/javax.servlet-api.jar"/>
+	<classpathentry kind="lib" path="/home/nijeguan/Android/mysql-connector-java-5.1.40/mysql-connector-java-5.1.40-bin.jar"/>
+	<classpathentry kind="lib" path="/home/nijeguan/Desktop/pdfbox-app-2.0.3.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

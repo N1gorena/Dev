@@ -21,7 +21,10 @@ import org.json.simple.JSONObject;
 public class FillPDF extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static String serverURL = "jdbc:mysql://localhost:3306/capstonedb?useSSL=false";
-   
+    public static final String pdfNameKey = "PDFKEY";
+    private final String userIDKey = "USERID";
+    public static final String pdfIDKey = "PDFID";
+    private final String basePDFLoc = "/home/PDF_Processing/";
    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
@@ -34,13 +37,24 @@ public class FillPDF extends HttpServlet {
 
 			//dbConn = DriverManager.getConnection(serverURL, "root", "Trojans17");
 			Map<String,String[]> paramMap = request.getParameterMap();
-			
-			File pdfDoc = new File("/home/PDF_Processing/test.pdf");
-			if(pdfDoc.exists()){
-					obj.put("Message","Exists");
+			StringBuilder fileLocation = new StringBuilder();
+
+			if(paramMap.containsKey(pdfNameKey)){
+				fileLocation.append(basePDFLoc);
+				fileLocation.append(paramMap.get(pdfNameKey)[0]);
 			}
 			else{
-				obj.put("Message","DNE DEV");
+				fileLocation.append("/noexist/");
+			}
+			
+			if(!paramMap.containsKey(userIDKey)){
+				errMessage = "No User info given.";
+
+			}
+			
+			File pdfDoc = new File(fileLocation.toString());
+			if(!pdfDoc.exists()){
+				errMessage = "FILE DOES NOT EXIST";
 			}
 			
 			PDDocument truePDF;
@@ -48,18 +62,16 @@ public class FillPDF extends HttpServlet {
 				Class.forName("org.apache.pdfbox.pdmodel.PDDocument");
 				truePDF = PDDocument.load(pdfDoc);
 				HelperFunctions.listFields(truePDF,paramMap);
-				obj.put("Mensaje","Cumpleto");
-
 
 			} catch (ClassNotFoundException e1) {
-				obj.put("Mensaje","CNF"+e1.getMessage());
+				errMessage = "CNF"+e1.getMessage();
 				e1.printStackTrace();
 			}catch (Exception e) {
-				obj.put("Mensaje","EEEEE"+e.getMessage());
+				errMessage = "EEEEE"+e.getMessage();
 				e.printStackTrace();
 			}
 			
-		
+		obj.put("Message",errMessage);
 		outputWriter.print(obj);
 	}
 
