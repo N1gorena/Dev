@@ -17,6 +17,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.json.simple.JSONObject;
 
+import com.mysql.jdbc.PreparedStatement;
+
 
 public class FillPDF extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -25,6 +27,7 @@ public class FillPDF extends HttpServlet {
     private final String userIDKey = "USERID";
     public static final String pdfIDKey = "PDFID";
     private final String basePDFLoc = "/home/PDF_Processing/";
+    private String sqlQuery = "Insert into filled_pdfs (UniqueID,PDFTitle,UniqueIDOfUser,FilePath) values (?,?,?,?)";
    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
@@ -35,13 +38,14 @@ public class FillPDF extends HttpServlet {
 		String errMessage = "None";
 		JSONObject obj = new JSONObject();
 
-			//dbConn = DriverManager.getConnection(serverURL, "root", "Trojans17");
 			Map<String,String[]> paramMap = request.getParameterMap();
 			StringBuilder fileLocation = new StringBuilder();
+			String pdfTitle = "N/A";
 
 			if(paramMap.containsKey(pdfNameKey)){
 				fileLocation.append(basePDFLoc);
 				fileLocation.append(paramMap.get(pdfNameKey)[0]);
+				pdfTitle = paramMap.get(pdfNameKey)[0];
 			}
 			else{
 				fileLocation.append("/noexist/");
@@ -56,12 +60,25 @@ public class FillPDF extends HttpServlet {
 			if(!pdfDoc.exists()){
 				errMessage = "FILE DOES NOT EXIST";
 			}
-			
+			boolean dbInsertFlag = false;
 			PDDocument truePDF;
 			try {
 				Class.forName("org.apache.pdfbox.pdmodel.PDDocument");
 				truePDF = PDDocument.load(pdfDoc);
 				HelperFunctions.listFields(truePDF,paramMap);
+				
+				Class.forName("com.mysql.jdbc.Driver");
+				dbConn = DriverManager.getConnection(serverURL, "root", "Trojans17");
+				PreparedStatement newFilledPDFStatement = (PreparedStatement) dbConn.prepareStatement(sqlQuery);
+				newFilledPDFStatement.setInt(1,777);
+				newFilledPDFStatement.setString(2, pdfTitle);
+				int uid = -1;
+				if(paramMap.containsKey(userIDKey) ){
+					uid = Integer.parseInt(paramMap.get(userIDKey)[0]);
+				}
+				newFilledPDFStatement.setInt(3,uid);
+				newFilledPDFStatement.setString(4,fileLocation.toString());
+				newFilledPDFStatement.executeUpdate();
 
 			} catch (ClassNotFoundException e1) {
 				errMessage = "CNF"+e1.getMessage();
@@ -70,6 +87,7 @@ public class FillPDF extends HttpServlet {
 				errMessage = "EEEEE"+e.getMessage();
 				e.printStackTrace();
 			}
+
 			
 		obj.put("Message",errMessage);
 		outputWriter.print(obj);
