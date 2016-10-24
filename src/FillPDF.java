@@ -40,12 +40,11 @@ public class FillPDF extends HttpServlet {
 
 			Map<String,String[]> paramMap = request.getParameterMap();
 			StringBuilder fileLocation = new StringBuilder();
-			String pdfTitle = "N/A";
 
 			if(paramMap.containsKey(pdfNameKey)){
 				fileLocation.append(basePDFLoc);
 				fileLocation.append(paramMap.get(pdfNameKey)[0]);
-				pdfTitle = paramMap.get(pdfNameKey)[0];
+				
 			}
 			else{
 				fileLocation.append("/noexist/");
@@ -60,12 +59,13 @@ public class FillPDF extends HttpServlet {
 			if(!pdfDoc.exists()){
 				errMessage = "FILE DOES NOT EXIST";
 			}
-			boolean dbInsertFlag = false;
+			
 			PDDocument truePDF;
 			try {
 				Class.forName("org.apache.pdfbox.pdmodel.PDDocument");
 				truePDF = PDDocument.load(pdfDoc);
-				HelperFunctions.listFields(truePDF,paramMap);
+				String pdfLoc = HelperFunctions.listFields(truePDF,paramMap);
+				String pdfTitle = pdfLoc.substring(HelperFunctions.getStorageLocation());
 				
 				Class.forName("com.mysql.jdbc.Driver");
 				dbConn = DriverManager.getConnection(serverURL, "root", "Trojans17");
@@ -77,8 +77,9 @@ public class FillPDF extends HttpServlet {
 					uid = Integer.parseInt(paramMap.get(userIDKey)[0]);
 				}
 				newFilledPDFStatement.setInt(3,uid);
-				newFilledPDFStatement.setString(4,fileLocation.toString());
+				newFilledPDFStatement.setString(4,pdfLoc);
 				newFilledPDFStatement.executeUpdate();
+				obj.put("FileURL", pdfLoc);
 
 			} catch (ClassNotFoundException e1) {
 				errMessage = "CNF"+e1.getMessage();
