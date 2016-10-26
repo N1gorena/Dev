@@ -43,6 +43,7 @@ public class HelperFunctions {
 		tempPath.append(fieldMap.get(FillPDF.pdfIDKey)[0]+"_");
 		tempPath.append(new SimpleDateFormat("yyyyMMddhhmm").format(new Date()));
 		tempPath.append(".pdf");
+		form.flatten();
 		doc.save(tempPath.toString());
 		doc.close();
 		Set<PosixFilePermission> otherReadablePermissionSet = new HashSet<>();
