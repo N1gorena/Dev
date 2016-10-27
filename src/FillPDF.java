@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import com.mysql.jdbc.PreparedStatement;
 
@@ -38,19 +40,29 @@ public class FillPDF extends HttpServlet {
 		String errMessage = "None";
 		JSONObject obj = new JSONObject();
 
-			Map<String,String[]> paramMap = request.getParameterMap();
+			//TODO the request is going to change to send a single JSON object under KEY
+			JSONParser parser =  new JSONParser();
+			String jsonString = request.getParameter("pdfJsonResults");
+			JSONObject pdfFieldData = null;
+			try {
+				pdfFieldData = (JSONObject) parser.parse(jsonString);
+			} catch (ParseException e2) {
+				errMessage = "Malformed JSON String";
+				e2.printStackTrace();
+			}
+			
 			StringBuilder fileLocation = new StringBuilder();
 
-			if(paramMap.containsKey(pdfNameKey)){
+			if(request.getParameter(pdfNameKey) != null){
 				fileLocation.append(basePDFLoc);
-				fileLocation.append(paramMap.get(pdfNameKey)[0]);
-				
+				fileLocation.append(request.getParameter(pdfNameKey));
 			}
 			else{
 				fileLocation.append("/noexist/");
+				errMessage = "No pdf title given.";
 			}
 			
-			if(!paramMap.containsKey(userIDKey)){
+			if(request.getParameter(userIDKey) == null){
 				errMessage = "No User info given.";
 
 			}
@@ -64,21 +76,21 @@ public class FillPDF extends HttpServlet {
 			try {
 				Class.forName("org.apache.pdfbox.pdmodel.PDDocument");
 				truePDF = PDDocument.load(pdfDoc);
-				String pdfLoc = HelperFunctions.listFields(truePDF,paramMap);
-				String pdfTitle = pdfLoc.substring(HelperFunctions.getStorageLocation());
+				String pdfLoc = HelperFunctions.listFields(truePDF,pdfFieldData,request.getParameter(pdfNameKey),request.getParameter(pdfIDKey));
+				//String pdfTitle = pdfLoc.substring(HelperFunctions.getStorageLocation());
 				
-				Class.forName("com.mysql.jdbc.Driver");
+				/*Class.forName("com.mysql.jdbc.Driver");
 				dbConn = DriverManager.getConnection(serverURL, "root", "Trojans17");
 				PreparedStatement newFilledPDFStatement = (PreparedStatement) dbConn.prepareStatement(sqlQuery);
 				newFilledPDFStatement.setInt(1,777);
 				newFilledPDFStatement.setString(2, pdfTitle);
 				int uid = -1;
-				if(paramMap.containsKey(userIDKey) ){
-					uid = Integer.parseInt(paramMap.get(userIDKey)[0]);
+				if(request.getParameter(userIDKey) != null ){
+					uid = Integer.parseInt(request.getParameter(userIDKey));
 				}
 				newFilledPDFStatement.setInt(3,uid);
 				newFilledPDFStatement.setString(4,pdfLoc);
-				newFilledPDFStatement.executeUpdate();
+				newFilledPDFStatement.executeUpdate();*/
 				obj.put("FileURL", pdfLoc);
 
 			} catch (ClassNotFoundException e1) {
