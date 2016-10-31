@@ -1,3 +1,4 @@
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +19,9 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDButton;
 import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDChoice;
+import org.apache.pdfbox.pdmodel.interactive.form.PDComboBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDListBox;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -62,11 +65,7 @@ public class HelperFunctions {
 				newfie.addField(field);
 				preparedField.put(fieldName, newfie);
 			}
-			else if(fieldType.equals("Ch")){
-				field.setValue("China");
-				List<String> temp = ((PDChoice)field).getValue();
-				for(String s : temp)
-					test.append(s);
+			else if(fieldType.equals("Ch")){				
 				mPDFField newfie = new mPDFField(fieldName);
 				newfie.setType(fieldType);
 				newfie.addField(field);
@@ -91,7 +90,7 @@ public class HelperFunctions {
 				else{
 					if(fieldToComplete.isCh()){
 						String value = (String) ((JSONArray)currObject.get("value")).get(0);
-						//fieldToComplete.setValue(value);
+						fieldToComplete.setValue(value);
 					}
 					else{
 						String value = (String) currObject.get("value");
@@ -120,7 +119,7 @@ public class HelperFunctions {
 		otherReadablePermissionSet.add(PosixFilePermission.GROUP_READ);
 		otherReadablePermissionSet.add(PosixFilePermission.OTHERS_READ);
 		Files.setPosixFilePermissions(Paths.get(tempPath.toString()), otherReadablePermissionSet );
-		test.append("<:"+tempPath.toString());
+		test.append(tempPath.toString());
 		return test.toString();
 		
 	

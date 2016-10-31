@@ -1,10 +1,13 @@
 
 
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,11 +28,13 @@ import com.mysql.jdbc.PreparedStatement;
 public class FillPDF extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static String serverURL = "jdbc:mysql://localhost:3306/capstonedb?useSSL=false";
-    public static final String pdfNameKey = "PDFKEY";
+    //public static final String pdfNameKey = "PDFKEY";
     private final String userIDKey = "USERID";
     public static final String pdfIDKey = "PDFID";
     private final String basePDFLoc = "/home/PDF_Processing/";
+    private String documentPathQ = "Select FileUrl from documents where Id = ?";
     private String sqlQuery = "Insert into filled_pdfs (UniqueID,PDFTitle,UniqueIDOfUser,FilePath) values (?,?,?,?)";
+    private String baseDocLoc = "/var/www/html";
    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
@@ -38,6 +43,8 @@ public class FillPDF extends HttpServlet {
 		PrintWriter outputWriter  = response.getWriter();
 		Connection dbConn;
 		String errMessage = "None";
+		//String tMessage = "Nil";
+		boolean successful = true;
 		JSONObject obj = new JSONObject();
 
 			//TODO the request is going to change to send a single JSON object under KEY
@@ -49,22 +56,39 @@ public class FillPDF extends HttpServlet {
 			} catch (ParseException e2) {
 				errMessage = "Malformed JSON String";
 				e2.printStackTrace();
-			}
+			}	
 			
 			StringBuilder fileLocation = new StringBuilder();
 
-			if(request.getParameter(pdfNameKey) != null){
-				fileLocation.append(basePDFLoc);
-				fileLocation.append(request.getParameter(pdfNameKey));
-			}
-			else{
-				fileLocation.append("/noexist/");
-				errMessage = "No pdf title given.";
-			}
-			
-			if(request.getParameter(userIDKey) == null){
+			if(request.getParameter(pdfIDKey) == null){
 				errMessage = "No User info given.";
 
+			}
+			else{
+				try {
+					Class.forName("com.mysql.jdbc.Driver");
+					dbConn = DriverManager.getConnection(serverURL,"root","Trojans17");
+					PreparedStatement getPathStatement = (PreparedStatement) dbConn.prepareStatement(documentPathQ);
+					getPathStatement.setInt(1, Integer.parseInt(request.getParameter(pdfIDKey)) );
+					ResultSet fileUrlResult = getPathStatement.executeQuery();
+					if(fileUrlResult.first()){
+						if(request.getParameter(userIDKey) != null){
+							fileLocation.append(baseDocLoc);
+							fileLocation.append(fileUrlResult.getString("FileUrl"));							
+						}
+						else{
+							fileLocation.append("/noexist/");
+							//vtMessage = "No pdf title given.";
+						}
+					}
+				} catch (ClassNotFoundException e) {
+					//tMessage = e.getMessage();
+					e.printStackTrace();
+				} catch (SQLException e) {
+					//tMessage = e.getMessage();
+					e.printStackTrace();
+				}
+				
 			}
 			
 			File pdfDoc = new File(fileLocation.toString());
@@ -76,7 +100,8 @@ public class FillPDF extends HttpServlet {
 			try {
 				Class.forName("org.apache.pdfbox.pdmodel.PDDocument");
 				truePDF = PDDocument.load(pdfDoc);
-				String pdfLoc = HelperFunctions.listFields(truePDF,pdfFieldData,request.getParameter(pdfNameKey),request.getParameter(pdfIDKey));
+				String pdfTitle = fileLocation.substring(fileLocation.lastIndexOf("/")+1);
+				String pdfLoc = HelperFunctions.listFields(truePDF,pdfFieldData,pdfTitle,request.getParameter(pdfIDKey));
 				//String pdfTitle = pdfLoc.substring(HelperFunctions.getStorageLocation());
 				
 				/*Class.forName("com.mysql.jdbc.Driver");
@@ -95,14 +120,17 @@ public class FillPDF extends HttpServlet {
 
 			} catch (ClassNotFoundException e1) {
 				errMessage = "CNF"+e1.getMessage();
+				successful = false;
 				e1.printStackTrace();
 			}catch (Exception e) {
 				errMessage = "EEEEE"+e.getMessage();
+				successful = false;
 				e.printStackTrace();
 			}
-
-			
+		//obj.put("TMESS",tMessage);
+		//obj.put("TEST", fileLocation.toString());	
 		obj.put("Message",errMessage);
+		obj.put("Success", successful);
 		outputWriter.print(obj);
 	}
 
