@@ -1,9 +1,12 @@
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -12,6 +15,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDChoice;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.json.simple.JSONObject;
 
 
@@ -41,15 +49,18 @@ public class PDFLoad extends HttpServlet {
 		String responseMessage = "NONE";
 		JSONObject returnable = new JSONObject();
 		Connection dbConn;
+		int docID = -1;
 		
 		Part pdfPart = request.getPart("PDF");
-		String pdfFileName = (request.getParameter("FILENAME") == null)?request.getParameter("FILENAME"):pdfPart.getSubmittedFileName();
+		String defaultFileName = pdfPart.getSubmittedFileName().substring(0,pdfPart.getSubmittedFileName().lastIndexOf("."));
+		String pdfFileName = !request.getParameter("FILENAME").equals("")?request.getParameter("FILENAME"):defaultFileName;
 		String pdfCategory = request.getParameter("CATEGORY");
 		
 		StringBuilder pdfSaveLocation = new StringBuilder();
 		pdfSaveLocation.append(pdfBaseFolder);
 		pdfSaveLocation.append(pdfCategory+"/");
-		pdfSaveLocation.append(pdfFileName);
+		pdfSaveLocation.append(pdfPart.getSubmittedFileName());
+		responseMessage = pdfCategory;
 		try{
 		pdfPart.write(pdfSaveLocation.toString());
 		Class.forName("com.mysql.jdbc.Driver");
@@ -65,13 +76,12 @@ public class PDFLoad extends HttpServlet {
 		insertedElementID.setString(3, pdfCategory);
 		ResultSet elementRow = insertedElementID.executeQuery();
 		if(elementRow.first()){
-			int docID = elementRow.getInt("Id");
+			docID = elementRow.getInt("Id");
+			responseMessage = String.valueOf(docID);
 		}
-		
-		
-		
 		}
 		catch(IOException e){
+			responseMessage = e.getMessage();
 			
 		}catch (ClassNotFoundException e) {
 			responseMessage = e.getMessage();
@@ -80,6 +90,104 @@ public class PDFLoad extends HttpServlet {
 			responseMessage = e.getMessage();
 			e.printStackTrace();
 		}
+		
+		 File file;
+	   	//file = new File("/Users/jordanbanafsheha/Desktop/iLegal_Server_S/sc100.pdf");
+	    String path;
+	    path = pdfSaveLocation.toString();
+	    //OoPdfFormExample
+	    file = new File(path);
+	    //making sure it exists and works
+	    if(!file.exists() || file.isDirectory()) { 
+		       responseMessage = "File Not Found. Existential Error";
+	    }
+	    
+	    try {
+			Class.forName("com.mysql.jdbc.Driver");
+			java.sql.Connection dbConnFin = DriverManager.getConnection(serverURL, "root", "Trojans17");
+			PreparedStatement PDFinfo = null;
+			String insertTableSQL = "INSERT INTO pdf_structure"
+					+ "(type, field_name, field_option, pdf_id) VALUES"
+					+ "(?,?,?,?)";
+			PDFinfo = (PreparedStatement) dbConnFin.prepareStatement(insertTableSQL);
+			// Load the pdfTemplate
+		    PDDocument pdfTemplate;
+		    try {
+				pdfTemplate = PDDocument.load(file);
+				//listFields(pdfTemplate);
+
+		    	PDDocumentCatalog docCatalog = pdfTemplate.getDocumentCatalog();
+		    	PDAcroForm acroForm = docCatalog.getAcroForm();
+
+		    	// Get field names
+		    	java.util.List<PDField> fieldList = new ArrayList<PDField>();
+		    	fieldList = acroForm.getFields();
+
+		    	// String the object array
+		    	String[] fieldArray = new String[fieldList.size()];
+		    	int i = 0;
+		    	for (PDField sField : fieldList) {
+		        	fieldArray[i] = sField.getFullyQualifiedName();
+		        	i++;
+		    	}
+		    	//
+		    	for (String f : fieldArray) {
+		    		PDField field = acroForm.getField(f);
+
+		    		String fieldNameTyope = field.getFieldType(); 
+ 
+            		String valueAsString = field.getValueAsString();
+
+					String checkBoxOptions = "";
+					String fixedQuestion = "";
+
+					//SQL NORMAL CASE
+					PDFinfo.setString(2, f);
+					PDFinfo.setString(3, valueAsString);
+
+
+					if (fieldNameTyope == "Btn"){
+	            		if (f.contains("[") && f.contains("]")){	
+	            			//check boxes
+	            			checkBoxOptions = f.substring(f.indexOf("[") + 1, f.indexOf("]"));
+
+							//fixing question format now
+							//fixedQuestion = StringUtils.substringBefore(f, "[");
+							fixedQuestion = f.substring(0, f.indexOf("["));
+
+							//SQL FOR THIS CASE
+							PDFinfo.setString(2, fixedQuestion);
+							PDFinfo.setString(3, checkBoxOptions); //valueAsString
+
+	            		}
+	            	}
+
+	            	if (fieldNameTyope == "Ch"){
+	            		List<String> test = ((PDChoice)(field)).getOptions(); 
+	            		for (String t:test){
+
+	            			PDFinfo.setString(1, fieldNameTyope);
+	            			PDFinfo.setString(2, f);
+	            			PDFinfo.setString(3, t);
+	            			PDFinfo.setInt(4, docID);
+	            			int rowsAffected = PDFinfo.executeUpdate();
+	            			System.out.println(t);
+	            		}
+	            	}
+
+
+		    		PDFinfo.setString(1, fieldNameTyope);
+					PDFinfo.setInt(4, docID);
+					int rowsAffected = PDFinfo.executeUpdate();
+		    	}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		catch(Exception x){
+		 responseMessage = x.getMessage();   
+		}
+		
 		returnable.put("MESSAGE", responseMessage);
 		response.getWriter().print(returnable);
 	}
