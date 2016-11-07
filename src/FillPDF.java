@@ -33,7 +33,7 @@ public class FillPDF extends HttpServlet {
     public static final String pdfIDKey = "PDFID";
     private final String basePDFLoc = "/home/PDF_Processing/";
     private String documentPathQ = "Select FileUrl from documents where Id = ?";
-    private String sqlQuery = "Insert into filled_pdfs (UniqueID,PDFTitle,UniqueIDOfUser,FilePath) values (?,?,?,?)";
+    private String sqlQuery = "Insert into filled_pdfs (PDFTitle,UniqueIDOfUser,FilePath) values (?,?,?)";
     private String baseDocLoc = "/var/www/html";
    
 	/**
@@ -102,20 +102,20 @@ public class FillPDF extends HttpServlet {
 				truePDF = PDDocument.load(pdfDoc);
 				String pdfTitle = fileLocation.substring(fileLocation.lastIndexOf("/")+1);
 				String pdfLoc = HelperFunctions.listFields(truePDF,pdfFieldData,pdfTitle,request.getParameter(pdfIDKey));
-				//String pdfTitle = pdfLoc.substring(HelperFunctions.getStorageLocation());
 				
-				/*Class.forName("com.mysql.jdbc.Driver");
+				
+				Class.forName("com.mysql.jdbc.Driver");
 				dbConn = DriverManager.getConnection(serverURL, "root", "Trojans17");
 				PreparedStatement newFilledPDFStatement = (PreparedStatement) dbConn.prepareStatement(sqlQuery);
-				newFilledPDFStatement.setInt(1,777);
-				newFilledPDFStatement.setString(2, pdfTitle);
+				
+				newFilledPDFStatement.setString(1, pdfTitle);
 				int uid = -1;
 				if(request.getParameter(userIDKey) != null ){
 					uid = Integer.parseInt(request.getParameter(userIDKey));
 				}
-				newFilledPDFStatement.setInt(3,uid);
-				newFilledPDFStatement.setString(4,pdfLoc);
-				newFilledPDFStatement.executeUpdate();*/
+				newFilledPDFStatement.setInt(2,uid);
+				newFilledPDFStatement.setString(3,pdfLoc);
+				newFilledPDFStatement.executeUpdate();
 				obj.put("FileURL", pdfLoc);
 
 			} catch (ClassNotFoundException e1) {
