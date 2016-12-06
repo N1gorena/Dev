@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 
 import javax.servlet.ServletException;
@@ -19,6 +20,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.mysql.jdbc.PreparedStatement;
+import com.mysql.jdbc.Statement;
 
 
 public class ListPDF extends HttpServlet {
@@ -81,12 +83,21 @@ public class ListPDF extends HttpServlet {
 				
 				break;
 			case "4":
-				genStatement = (PreparedStatement) dbConn.prepareStatement("SELECT UniqueID,Filepath,PDFTitle FROM filled_pdfs where UniqueIDOfUser = ?");
+				genStatement = (PreparedStatement) dbConn.prepareStatement("SELECT UniqueID,Filepath,PDFTitle,Timestamp FROM filled_pdfs where UniqueIDOfUser = ?");
 				genStatement.setInt(1, Integer.parseInt(request.getParameter("UserUniqueID")));
 				results = genStatement.executeQuery();
 				ArrayList<String[]> filledPDFS = new ArrayList<>();
 				while(results.next()){
-					String[] boofer = {results.getString(1),results.getString(2),results.getString(3)};
+					String title = results.getString("PDFTitle");
+					String realNameQuery = "SELECT FileName FROM documents WHERE FileURL LIKE '%"+title+"'";
+					Statement nuStatement = (Statement) dbConn.createStatement();
+					ResultSet realName = nuStatement.executeQuery(realNameQuery);
+					if(realName.first()){
+						title = realName.getString("FileName");
+					}
+					Timestamp tS = results.getTimestamp("Timestamp");
+
+					String[] boofer = {results.getString("UniqueID"),results.getString("Filepath"),title,tS.toString()};
 					filledPDFS.add(boofer);
 				}
 				obj.put("Message", message);
@@ -107,6 +118,8 @@ public class ListPDF extends HttpServlet {
 				obj.put("Success", false);
 				
 			}
+			message  = request.getParameter("Type");
+			obj.put("Message", message);
 			dbConn.close(); 
 			output.print(obj);
 			

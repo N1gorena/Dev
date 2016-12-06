@@ -2,8 +2,8 @@
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
   <display-name>Dev</display-name>
   <servlet>
-  	<servlet-name>PDFLoader</servlet-name>
-  	<servlet-class>PDFLoad</servlet-class>
+    <servlet-name>PDFLoader</servlet-name>
+    <servlet-class>PDFLoad</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>SignUp</servlet-name>
@@ -25,10 +25,9 @@
     <servlet-name>FillPDF</servlet-name>
     <servlet-class>FillPDF</servlet-class>
   </servlet>
-  
   <servlet-mapping>
-  	<servlet-name>PDFLoader</servlet-name>
-  	<url-pattern>/UploadPDF</url-pattern>
+    <servlet-name>PDFLoader</servlet-name>
+    <url-pattern>/UploadPDF</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>SignUp</servlet-name>

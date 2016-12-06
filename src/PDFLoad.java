@@ -1,12 +1,17 @@
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -48,6 +53,7 @@ public class PDFLoad extends HttpServlet {
 		response.setContentType("application/json");
 		String responseMessage = "NONE";
 		JSONObject returnable = new JSONObject();
+		boolean success = true;
 		Connection dbConn;
 		int docID = -1;
 		
@@ -60,19 +66,34 @@ public class PDFLoad extends HttpServlet {
 		pdfSaveLocation.append(pdfBaseFolder);
 		pdfSaveLocation.append(pdfCategory+"/");
 		pdfSaveLocation.append(pdfPart.getSubmittedFileName());
-		responseMessage = pdfCategory;
+		
 		try{
 		pdfPart.write(pdfSaveLocation.toString());
+		//Set File Permissions
+		Set<PosixFilePermission> otherReadablePermissionSet = new HashSet<>();
+		otherReadablePermissionSet.add(PosixFilePermission.OWNER_READ);
+		otherReadablePermissionSet.add(PosixFilePermission.OWNER_WRITE);
+		otherReadablePermissionSet.add(PosixFilePermission.OWNER_EXECUTE);
+		otherReadablePermissionSet.add(PosixFilePermission.GROUP_EXECUTE);
+		otherReadablePermissionSet.add(PosixFilePermission.GROUP_WRITE);
+		otherReadablePermissionSet.add(PosixFilePermission.GROUP_READ);
+		otherReadablePermissionSet.add(PosixFilePermission.OTHERS_READ);
+		otherReadablePermissionSet.add(PosixFilePermission.OTHERS_WRITE);
+		otherReadablePermissionSet.add(PosixFilePermission.OTHERS_EXECUTE);
+		Files.setPosixFilePermissions(Paths.get(pdfSaveLocation.toString()), otherReadablePermissionSet );
+		
 		Class.forName("com.mysql.jdbc.Driver");
 		dbConn = DriverManager.getConnection(serverURL, "root","Trojans17");
 		PreparedStatement query = (PreparedStatement) dbConn.prepareStatement(sqlInsertString);
 		query.setString(1, pdfFileName);
-		query.setString(2, pdfSaveLocation.toString());
+		String fileUrl = pdfSaveLocation.toString();
+		int cutOffBase = fileUrl.indexOf(pdfCategory);
+		query.setString(2, fileUrl.substring(cutOffBase));
 		query.setString(3, pdfCategory);
 		query.executeUpdate();
 		PreparedStatement insertedElementID = (PreparedStatement) dbConn.prepareStatement(sqlSelectString);
 		insertedElementID.setString(1, pdfFileName);
-		insertedElementID.setString(2, pdfSaveLocation.toString());
+		insertedElementID.setString(2, fileUrl.substring(cutOffBase));
 		insertedElementID.setString(3, pdfCategory);
 		ResultSet elementRow = insertedElementID.executeQuery();
 		if(elementRow.first()){
@@ -82,13 +103,14 @@ public class PDFLoad extends HttpServlet {
 		}
 		catch(IOException e){
 			responseMessage = e.getMessage();
+			success = false;
 			
 		}catch (ClassNotFoundException e) {
 			responseMessage = e.getMessage();
-			e.printStackTrace();
+			success = false;
 		} catch (SQLException e) {
 			responseMessage = e.getMessage();
-			e.printStackTrace();
+			success = false;
 		}
 		
 		 File file;
@@ -100,6 +122,7 @@ public class PDFLoad extends HttpServlet {
 	    //making sure it exists and works
 	    if(!file.exists() || file.isDirectory()) { 
 		       responseMessage = "File Not Found. Existential Error";
+		       success = false;
 	    }
 	    
 	    try {
@@ -175,20 +198,21 @@ public class PDFLoad extends HttpServlet {
 	            		}
 	            	}
 
-
 		    		PDFinfo.setString(1, fieldNameTyope);
 					PDFinfo.setInt(4, docID);
 					int rowsAffected = PDFinfo.executeUpdate();
 		    	}
-			} catch (IOException e) {
+			}catch (IOException e) {
 				e.printStackTrace();
+				success = false;
 			}
-		}
-		catch(Exception x){
-		 responseMessage = x.getMessage();   
+		}catch(Exception x){
+		 responseMessage = x.getMessage();  
+		 success = false;
 		}
 		
-		returnable.put("MESSAGE", responseMessage);
+		returnable.put("Message", responseMessage);
+		returnable.put("Success", success);
 		response.getWriter().print(returnable);
 	}
 }

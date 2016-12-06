@@ -31,10 +31,9 @@ public class FillPDF extends HttpServlet {
     //public static final String pdfNameKey = "PDFKEY";
     private final String userIDKey = "USERID";
     public static final String pdfIDKey = "PDFID";
-    private final String basePDFLoc = "/home/PDF_Processing/";
     private String documentPathQ = "Select FileUrl from documents where Id = ?";
     private String sqlQuery = "Insert into filled_pdfs (PDFTitle,UniqueIDOfUser,FilePath) values (?,?,?)";
-    private String baseDocLoc = "/var/www/html";
+    private String baseDocLoc = "/var/www/html/pdfs/";
    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)

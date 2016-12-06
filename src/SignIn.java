@@ -45,6 +45,7 @@ public class SignIn extends HttpServlet {
 			if(userInQuestion.first()){
 				message = "User found in database.";
 				obj.put("Message", message);
+				obj.put("UserId", userInQuestion.getString("Id"));
 				obj.put("Password",userInQuestion.getString("Password"));
 				obj.put("EmailAddress",userInQuestion.getString("Email"));
 				obj.put("LicenseNumber",userInQuestion.getString("DLNumber"));
